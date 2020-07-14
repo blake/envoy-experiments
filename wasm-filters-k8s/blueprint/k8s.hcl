@@ -7,13 +7,13 @@ k8s_cluster "k3s" {
   image {
     name = "nicholasjackson/consul-k8s-dev:latest"
   }
-  
+
   image {
     name = "nicholasjackson/consul-envoy:dev-dev"
   }
 
   image {
-    name = "nicholasjackson/example-wasm-filter:dev"
+    name = "blakec/secure-link-filter:v0.2"
   }
 
   network {

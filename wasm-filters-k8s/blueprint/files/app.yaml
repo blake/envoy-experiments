@@ -10,8 +10,8 @@ spec:
   ports:
   - name: http
     protocol: TCP
-    port: 9090
-    targetPort: 9090
+    port: 5000
+    targetPort: 5000
 
 ---
 # Web frontend
@@ -33,63 +33,73 @@ spec:
         app: web
       annotations:
         "consul.hashicorp.com/connect-inject": "true"
-        "consul.hashicorp.com/connect-service-upstreams": "api:9091"
+        "consul.hashicorp.com/connect-service-upstreams": "downloads:80"
         "consul.hashicorp.com/connect-service-protocol": "http"
     spec:
       containers:
       - name: web
-        image: nicholasjackson/fake-service:v0.9.0
+        image: blakec/demo-secure-link-app:v0.0.1
         ports:
-        - containerPort: 9090
-        env:
-        - name: "LISTEN_ADDR"
-          value: "0.0.0.0:9090"
-        - name: "UPSTREAM_URIS"
-          value: "http://localhost:9091"
-        - name: "NAME"
-          value: "web"
-        - name: "MESSAGE"
-          value: "Hello World"
-        - name: "HTTP_CLIENT_KEEP_ALIVES"
-          value: "false"
-        - name: "TRACING_ZIPKIN"
-          value: "http://jaeger-collector:9411"
+        - containerPort: 5000
 
 ---
-# API service version 2
+# Downloads service version 1
 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: api-deployment-v1
+  name: downloads-deployment-v1
   labels:
-    app: api-v1
+    app: downloads-v1
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: api-v1
+      app: downloads-v1
   template:
     metadata:
       labels:
-        app: api-v1
+        app: downloads-v1
       annotations:
         "consul.hashicorp.com/connect-inject": "true"
+        "consul.hashicorp.com/connect-service-protocol": "http"
         "consul.hashicorp.com/service-meta-version": "1"
         "consul.hashicorp.com/service-tags": "v1"
-        "consul.hashicorp.com/connect-service-protocol": "http"
-        "consul.hashicorp.com/connect-wasm-filter-add_header": "/filters/optimized.wasm"
-        "consul.hashicorp.com/connect-inject-image": "nicholasjackson/example-wasm-filter:dev"
     spec:
       containers:
-      - name: api
-        image: nicholasjackson/fake-service:v0.9.0
+      - name: downloads
+        image: blakec/demo-secure-link-downloads:v0.0.1
         ports:
-        - containerPort: 9090
-        env:
-        - name: "LISTEN_ADDR"
-          value: "0.0.0.0:9090"
-        - name: "NAME"
-          value: "api-v1"
-        - name: "MESSAGE"
-          value: "Response from API v1"
+        - containerPort: 80
+
+---
+# Downloads service version 1
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: downloads-deployment-v2
+  labels:
+    app: downloads-v2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: downloads-v2
+  template:
+    metadata:
+      labels:
+        app: downloads-v2
+      annotations:
+        "consul.hashicorp.com/connect-inject": "true"
+        "consul.hashicorp.com/service-meta-version": "2"
+        "consul.hashicorp.com/service-tags": "v2"
+        "consul.hashicorp.com/connect-service-protocol": "http"
+        "consul.hashicorp.com/connect-wasm-filter-add_header": "/filters/optimized.wasm"
+        "consul.hashicorp.com/connect-inject-image": "blakec/secure-link-filter:v0.2"
+    spec:
+      containers:
+      - name: downloads
+        image: blakec/demo-secure-link-downloads:v0.0.1
+        ports:
+        - containerPort: 80

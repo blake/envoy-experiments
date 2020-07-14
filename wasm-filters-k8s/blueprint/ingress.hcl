@@ -25,9 +25,8 @@ k8s_ingress "web-http" {
   service  = "web-service"
 
   port {
-    local  = 9090
-    remote = 9090
-    host   = 19090
-    open_in_browser = "/ui"
+    local  = 5000
+    remote = 5000
+    host   = 5000
   }
 }
